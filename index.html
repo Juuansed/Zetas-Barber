@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zetas Barber | Barbería en General Pacheco, Tigre</title>
+  <meta name="description" content="Zetas Barber: barbería en El Zorzal, General Pacheco, Tigre. Corte, barba y cejas, y corte a domicilio. Reservá tu turno online en segundos.">
+  <meta name="theme-color" content="#111111">
+  <link rel="canonical" href="https://www.zetasbarber.com.ar/">
+  <link rel="icon" href="img/logo.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="img/logo.jpg">
+
+  <!-- Vista previa al compartir el link (WhatsApp, Instagram, Facebook) -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:title" content="Zetas Barber | Barbería en General Pacheco, Tigre">
+  <meta property="og:description" content="Corte, barba y cejas en El Zorzal, General Pacheco. También vamos a domicilio. Reservá online.">
+  <meta property="og:image" content="img/logo.jpg">
+
+  <!-- Datos para Google (ficha de negocio local) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BarberShop",
+    "name": "Zetas Barber",
+    "image": "img/logo.jpg",
+    "priceRange": "$8.000 - $15.000+",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Barrio El Zorzal",
+      "addressLocality": "General Pacheco",
+      "addressRegion": "Buenos Aires",
+      "addressCountry": "AR"
+    },
+    "areaServed": "Tigre, Buenos Aires",
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "12:00", "closes": "20:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday"], "opens": "12:00", "closes": "18:00" }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+  <a class="skip" href="#reservar">Saltar a reservar turno</a>
+
+  <!-- ============ HEADER ============ -->
+  <header class="header" id="top">
+    <div class="wrap header__inner">
+      <a href="#top" class="brand" aria-label="Zetas Barber, volver al inicio">
+        <img src="img/logo.jpg" alt="" width="44" height="44" class="brand__logo">
+        <span class="brand__text">ZETAS<span> BARBER</span></span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="nav" class="nav" aria-label="Principal">
+        <a href="#servicios">Servicios</a>
+        <a href="#domicilio">A domicilio</a>
+        <a href="#horarios">Horarios</a>
+        <a href="#ubicacion">Ubicación</a>
+        <a href="#reservar" class="btn btn--gold btn--sm">Reservar</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="wrap hero__inner">
+        <img src="img/logo.jpg" alt="Logo de Zetas Barber Shop" class="hero__logo" width="180" height="180">
+        <p class="eyebrow">El Zorzal · General Pacheco · Tigre</p>
+        <h1 class="hero__title">ZETAS<br><span>BARBER</span></h1>
+        <p class="hero__lead">Cortes con onda, barba prolija y buena charla. En el local o en tu casa.</p>
+        <div class="hero__ctas">
+          <a href="#reservar" class="btn btn--gold btn--lg">Reservá tu turno</a>
+          <a href="#domicilio" class="btn btn--ghost btn--lg">Calculá el domicilio</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SERVICIOS ============ -->
+    <section id="servicios" class="section">
+      <div class="wrap">
+        <header class="section__head reveal">
+          <p class="eyebrow">Servicios y precios</p>
+          <h2 class="section__title">Elegí tu corte</h2>
+        </header>
+        <div class="services" id="lista-servicios"><!-- se completa desde config.js --></div>
+      </div>
+    </section>
+
+    <!-- ============ CALCULADORA DOMICILIO ============ -->
+    <section id="domicilio" class="section section--alt">
+      <div class="wrap">
+        <header class="section__head reveal">
+          <p class="eyebrow">Corte a domicilio</p>
+          <h2 class="section__title">¿Cuánto sale que vaya a tu casa?</h2>
+          <p class="section__sub">Base <strong data-precio="base"></strong> + <strong data-precio="km"></strong> por km recorrido en auto desde El Zorzal.</p>
+        </header>
+
+        <div class="card calc reveal">
+          <div class="field">
+            <label for="calc-dir">Tu dirección</label>
+            <div class="autocomplete">
+              <input id="calc-dir" type="text" autocomplete="off" placeholder="Ej: Av. Boulogne Sur Mer 1500, Pacheco"
+                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="calc-sug">
+              <ul id="calc-sug" class="autocomplete__list" role="listbox" hidden></ul>
+            </div>
+            <p class="hint">Escribí calle, número y localidad. Elegí una opción de la lista.</p>
+          </div>
+          <div class="calc__actions">
+            <button type="button" class="btn btn--gold" id="calc-btn">Calcular precio</button>
+            <button type="button" class="btn btn--ghost" id="calc-geo">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 3h-2.07A7 7 0 0 0 13 5.07V3h-2v2.07A7 7 0 0 0 5.07 11H3v2h2.07A7 7 0 0 0 11 18.93V21h2v-2.07A7 7 0 0 0 18.93 13H21v-2Zm-9 6a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/></svg>
+              Usar mi ubicación
+            </button>
+          </div>
+          <div class="calc__result" id="calc-result" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RESERVAS ============ -->
+    <section id="reservar" class="section">
+      <div class="wrap">
+        <header class="section__head reveal">
+          <p class="eyebrow">Turnos online</p>
+          <h2 class="section__title">Reservá tu turno</h2>
+          <p class="section__sub">Elegí servicio, día y horario. Solo te mostramos los turnos libres.</p>
+        </header>
+
+        <div class="demo-banner" id="demo-banner" hidden>
+          <strong>Modo demo:</strong> la planilla todavía no está conectada, así que las reservas no se guardan. Seguí los pasos de INSTRUCCIONES.md.
+        </div>
+
+        <form id="form-reserva" class="card form reveal" novalidate>
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-nombre">Nombre y apellido <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-nombre" name="nombre" type="text" autocomplete="name" required maxlength="80">
+              <p class="error" id="e-nombre"></p>
+            </div>
+            <div class="field">
+              <label for="f-tel">Teléfono / WhatsApp <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-tel" name="telefono" type="tel" inputmode="tel" autocomplete="tel" required placeholder="Ej: 11 5555-1234" maxlength="25">
+              <p class="error" id="e-tel"></p>
+            </div>
+          </div>
+
+          <fieldset class="field">
+            <legend>Servicio <span class="req" aria-hidden="true">*</span></legend>
+            <div class="chips" id="f-servicios"><!-- desde config.js --></div>
+            <p class="error" id="e-servicio"></p>
+          </fieldset>
+
+          <div class="domi-box" id="domi-box" hidden>
+            <div class="field">
+              <label for="f-dir">Dirección para el corte a domicilio <span class="req" aria-hidden="true">*</span></label>
+              <div class="autocomplete">
+                <input id="f-dir" name="direccion" type="text" autocomplete="off" placeholder="Calle, número y localidad"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="f-sug">
+                <ul id="f-sug" class="autocomplete__list" role="listbox" hidden></ul>
+              </div>
+              <div class="calc__actions calc__actions--tight">
+                <button type="button" class="btn btn--ghost btn--sm" id="f-calc">Calcular</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="f-geo">Usar mi ubicación</button>
+              </div>
+              <p class="error" id="e-dir"></p>
+            </div>
+            <div class="calc__result calc__result--mini" id="f-calc-result" aria-live="polite"></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="f-fecha">Fecha <span class="req" aria-hidden="true">*</span></label>
+              <input id="f-fecha" name="fecha" type="date" required>
+              <p class="hint" id="f-fecha-info"></p>
+              <p class="error" id="e-fecha"></p>
+            </div>
+            <div class="field">
+              <span class="label" id="lbl-hora">Horario <span class="req" aria-hidden="true">*</span></span>
+              <div class="slots" id="f-slots" role="radiogroup" aria-labelledby="lbl-hora">
+                <p class="hint">Primero elegí una fecha.</p>
+              </div>
+              <p class="error" id="e-hora"></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-com">Comentarios <span class="opt">(opcional)</span></label>
+            <textarea id="f-com" name="comentarios" rows="3" maxlength="400" placeholder="Ej: quiero degradé bajo, vengo con mi hijo, timbre B…"></textarea>
+          </div>
+
+          <div class="total" aria-live="polite">
+            <span>Total</span>
+            <strong id="f-total">—</strong>
+          </div>
+
+          <button type="submit" class="btn btn--gold btn--lg btn--block" id="f-submit">Confirmar turno</button>
+          <p class="form__msg" id="f-msg" role="alert"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ HORARIOS ============ -->
+    <section id="horarios" class="section section--alt">
+      <div class="wrap narrow">
+        <header class="section__head reveal">
+          <p class="eyebrow">Cuándo atendemos</p>
+          <h2 class="section__title">Horarios</h2>
+        </header>
+        <ul class="hours card reveal" id="lista-horarios"><!-- desde config.js --></ul>
+      </div>
+    </section>
+
+    <!-- ============ UBICACIÓN ============ -->
+    <section id="ubicacion" class="section">
+      <div class="wrap">
+        <header class="section__head reveal">
+          <p class="eyebrow">Dónde estamos</p>
+          <h2 class="section__title">Ubicación</h2>
+          <p class="section__sub" data-texto="direccion"></p>
+        </header>
+        <div class="map reveal">
+          <iframe id="mapa" title="Mapa de Zetas Barber en El Zorzal, General Pacheco" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="socials reveal">
+          <a class="social" id="link-ig" target="_blank" rel="noopener">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4ZM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4ZM21.9 7.1c-.1-1.6-.4-3-1.6-4.2S17.7 1.4 16.1 1.3C14.4 1.2 9.6 1.2 7.9 1.3 6.3 1.4 4.9 1.7 3.7 2.9S2.2 5.5 2.1 7.1C2 8.8 2 13.6 2.1 15.3c.1 1.6.4 3 1.6 4.2s2.6 1.5 4.2 1.6c1.7.1 6.5.1 8.2 0 1.6-.1 3-.4 4.2-1.6s1.5-2.6 1.6-4.2c.1-1.7.1-6.5 0-8.2Zm-2.2 10.1a3.3 3.3 0 0 1-1.9 1.9c-1.3.5-4.4.4-5.8.4s-4.5.1-5.8-.4a3.3 3.3 0 0 1-1.9-1.9c-.5-1.3-.4-4.4-.4-5.8s-.1-4.5.4-5.8a3.3 3.3 0 0 1 1.9-1.9c1.3-.5 4.4-.4 5.8-.4s4.5-.1 5.8.4a3.3 3.3 0 0 1 1.9 1.9c.5 1.3.4 4.4.4 5.8s.1 4.5-.4 5.8Z"/></svg>
+            <span></span>
+          </a>
+          <a class="social" id="link-wa" target="_blank" rel="noopener">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M17.5 14.4c-.3-.1-1.8-.9-2-1s-.5-.1-.7.1-.8 1-1 1.2-.4.2-.7.1a8.2 8.2 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6a1.1 1.1 0 0 0-.8.4 3.4 3.4 0 0 0-1 2.5 5.9 5.9 0 0 0 1.2 3.1 13.5 13.5 0 0 0 5.2 4.6c1.9.8 2.7.9 3.6.7a3.1 3.1 0 0 0 2-1.4 2.5 2.5 0 0 0 .2-1.4c-.1-.1-.3-.2-.6-.3ZM12 21.8a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.8 9.8 0 1 1 8.3 4.6ZM12 .2A11.8 11.8 0 0 0 1.8 17.9L.1 24l6.3-1.7A11.8 11.8 0 1 0 12 .2Z"/></svg>
+            <span>WhatsApp</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <div>
+        <p class="footer__brand">ZETAS BARBER</p>
+        <p data-texto="direccion"></p>
+      </div>
+      <ul class="footer__list">
+        <li><a id="ft-wa" target="_blank" rel="noopener"></a></li>
+        <li><a id="ft-ig" target="_blank" rel="noopener"></a></li>
+        <li id="ft-mail-li" hidden><a id="ft-mail"></a></li>
+      </ul>
+      <p class="footer__copy">© <span id="anio"></span> Zetas Barber. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Botón flotante de WhatsApp -->
+  <a class="wa-float" id="wa-float" target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp">
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="30" height="30"><path fill="currentColor" d="M17.5 14.4c-.3-.1-1.8-.9-2-1s-.5-.1-.7.1-.8 1-1 1.2-.4.2-.7.1a8.2 8.2 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6a1.1 1.1 0 0 0-.8.4 3.4 3.4 0 0 0-1 2.5 5.9 5.9 0 0 0 1.2 3.1 13.5 13.5 0 0 0 5.2 4.6c1.9.8 2.7.9 3.6.7a3.1 3.1 0 0 0 2-1.4 2.5 2.5 0 0 0 .2-1.4c-.1-.1-.3-.2-.6-.3ZM12 21.8a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4a9.8 9.8 0 1 1 8.3 4.6ZM12 .2A11.8 11.8 0 0 0 1.8 17.9L.1 24l6.3-1.7A11.8 11.8 0 1 0 12 .2Z"/></svg>
+  </a>
+
+  <!-- Confirmación del turno -->
+  <dialog class="modal" id="modal-ok" aria-labelledby="modal-title">
+    <div class="modal__body">
+      <div class="modal__check" aria-hidden="true">✓</div>
+      <h2 id="modal-title">¡Turno confirmado!</h2>
+      <p class="modal__lead" id="modal-lead"></p>
+      <dl class="summary" id="modal-resumen"></dl>
+      <a class="btn btn--wa btn--lg btn--block" id="modal-wa" target="_blank" rel="noopener">Enviar confirmación por WhatsApp</a>
+      <button type="button" class="btn btn--ghost btn--block" id="modal-close">Cerrar</button>
+    </div>
+  </dialog>
+
+  <script src="js/config.js"></script>
+  <script src="js/mapas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
