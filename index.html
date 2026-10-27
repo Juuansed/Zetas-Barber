@@ -179,20 +179,25 @@
             <div class="calc__result calc__result--mini" id="f-calc-result" aria-live="polite"></div>
           </div>
 
-          <div class="grid-2">
-            <div class="field">
-              <label for="f-fecha">Fecha <span class="req" aria-hidden="true">*</span></label>
-              <input id="f-fecha" name="fecha" type="date" required>
-              <p class="hint" id="f-fecha-info"></p>
-              <p class="error" id="e-fecha"></p>
+          <div class="field">
+            <span class="label" id="lbl-fecha">Fecha <span class="req" aria-hidden="true">*</span></span>
+            <input id="f-fecha" name="fecha" type="hidden">
+            <div class="date-row">
+              <button class="arrow" type="button" data-mover="-1" aria-label="Día anterior">‹</button>
+              <p class="date-title" id="f-fecha-titulo" aria-live="polite">Elegí un día</p>
+              <button class="arrow" type="button" data-mover="1" aria-label="Día siguiente">›</button>
             </div>
-            <div class="field">
-              <span class="label" id="lbl-hora">Horario <span class="req" aria-hidden="true">*</span></span>
-              <div class="slots" id="f-slots" role="radiogroup" aria-labelledby="lbl-hora">
-                <p class="hint">Primero elegí una fecha.</p>
-              </div>
-              <p class="error" id="e-hora"></p>
+            <div class="days" id="f-dias" role="radiogroup" aria-labelledby="lbl-fecha"></div>
+            <p class="hint" id="f-fecha-info"></p>
+            <p class="error" id="e-fecha"></p>
+          </div>
+
+          <div class="field">
+            <span class="label" id="lbl-hora">Horario <span class="req" aria-hidden="true">*</span></span>
+            <div class="slots" id="f-slots" role="radiogroup" aria-labelledby="lbl-hora">
+              <p class="hint">Primero elegí una fecha.</p>
             </div>
+            <p class="error" id="e-hora"></p>
           </div>
 
           <div class="field">

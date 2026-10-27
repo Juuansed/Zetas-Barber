@@ -15,6 +15,8 @@
 
   const MODO_DEMO = !/^https:\/\/script\.google\.com\//.test(CONFIG.SCRIPT_URL || "");
   const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const DIAS_CORTO = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const ORIGEN = { lat: CONFIG.ORIGEN_LAT, lng: CONFIG.ORIGEN_LNG };
   const waLink = texto => "https://wa.me/" + CONFIG.WHATSAPP + (texto ? "?text=" + encodeURIComponent(texto) : "");
 
@@ -325,6 +327,58 @@
 
   function pintarSlots(html) { $("#f-slots").innerHTML = html; }
 
+  /* ---------- Selector de días (igual que en el panel) ---------- */
+  const diasReservables = () => {
+    const hoy = ahoraAR().fecha;
+    const out = [];
+    for (let i = 0; i <= CONFIG.DIAS_ANTICIPACION; i++) out.push(sumarDias(hoy, i));
+    return out;
+  };
+  const diaAbierto = iso => !!horarioDelDia(iso) && turnosDelDia(iso).length > 0;
+
+  function pintarDias() {
+    const hoy = ahoraAR().fecha;
+    const elegido = $("#f-fecha").value;
+    const dias = diasReservables();
+    const cont = $("#f-dias");
+    cont.innerHTML = dias.map(iso => {
+      const d = isoADate(iso);
+      const abierto = diaAbierto(iso);
+      return `<button type="button" class="day" role="radio" data-iso="${iso}" aria-checked="${iso === elegido}"
+        aria-label="${isoALindo(iso)}${abierto ? "" : " (sin turnos)"}" ${abierto ? "" : "disabled"}>
+        <small>${iso === hoy ? "hoy" : DIAS_CORTO[d.getDay()]}</small><b>${d.getDate()}</b><i>${MESES[d.getMonth()]}</i></button>`;
+    }).join("");
+
+    if (elegido) {
+      const d = isoADate(elegido);
+      const nombre = elegido === hoy ? "Hoy" : elegido === sumarDias(hoy, 1) ? "Mañana" : DIAS[d.getDay()];
+      $("#f-fecha-titulo").textContent = `${nombre} ${d.getDate()} ${MESES[d.getMonth()]}`;
+      const b = cont.querySelector(`[data-iso="${elegido}"]`);
+      if (b) cont.scrollTo({ left: b.offsetLeft - cont.clientWidth / 2 + b.offsetWidth / 2, behavior: "smooth" });
+    } else {
+      $("#f-fecha-titulo").textContent = "Elegí un día";
+    }
+    const abiertos = dias.filter(diaAbierto);
+    $('#reservar [data-mover="-1"]').disabled = !elegido || !abiertos.some(i => i < elegido);
+    $('#reservar [data-mover="1"]').disabled = !abiertos.some(i => !elegido || i > elegido);
+  }
+
+  function elegirFecha(iso) {
+    $("#f-fecha").value = iso;
+    pintarDias();
+    cargarHorarios();
+  }
+
+  // Flechas: saltan al día abierto anterior o siguiente.
+  function moverDia(paso) {
+    const elegido = $("#f-fecha").value;
+    const abiertos = diasReservables().filter(diaAbierto);
+    const destino = paso > 0
+      ? abiertos.find(i => !elegido || i > elegido)
+      : abiertos.filter(i => i < elegido).pop();
+    if (destino) elegirFecha(destino);
+  }
+
   async function cargarHorarios() {
     const iso = $("#f-fecha").value;
     horaElegida = null;
@@ -337,7 +391,7 @@
     if (!horarioDelDia(iso)) { $("#e-fecha").textContent = "Ese día no atendemos. Elegí otra fecha."; return pintarSlots(""); }
 
     const h = horarioDelDia(iso);
-    $("#f-fecha-info").textContent = `${isoALindo(iso)} · de ${h.abre} a ${h.cierra}`;
+    $("#f-fecha-info").textContent = `Ese día atendemos de ${h.abre} a ${h.cierra}.`;
     const posibles = turnosDelDia(iso);
     if (!posibles.length) return pintarSlots(`<p class="slots__msg hint">No quedan turnos para hoy. Elegí otro día.</p>`);
 
@@ -401,7 +455,8 @@
     if (!s && !primero) primero = $("#f-servicios input");
     if (s && s.domicilio) marcarError("#e-dir", "#f-dir", domi ? "" : "Calculá el precio con tu dirección antes de confirmar.");
     else $("#e-dir").textContent = "";
-    marcarError("#e-fecha", "#f-fecha", $("#f-fecha").value ? $("#e-fecha").textContent : "Elegí una fecha.");
+    marcarError("#e-fecha", null, $("#f-fecha").value ? $("#e-fecha").textContent : "Elegí una fecha.");
+    if (!$("#f-fecha").value && !primero) primero = $("#f-dias");
     if (!horaElegida) { $("#e-hora").textContent = "Elegí un horario."; ok = false; primero = primero || $("#f-slots"); }
     if (primero) { primero.scrollIntoView({ behavior: "smooth", block: "center" }); if (primero.focus) primero.focus({ preventScroll: true }); }
     return ok;
@@ -440,11 +495,11 @@
   }
 
   function iniciarReservas() {
-    const fecha = $("#f-fecha");
-    const hoy = ahoraAR().fecha;
-    fecha.min = hoy;
-    fecha.max = sumarDias(hoy, CONFIG.DIAS_ANTICIPACION);
-    fecha.addEventListener("change", cargarHorarios);
+    pintarDias();
+    $("#f-dias").addEventListener("click", e => {
+      const b = e.target.closest(".day"); if (b && !b.disabled) elegirFecha(b.dataset.iso);
+    });
+    $$("#reservar [data-mover]").forEach(b => b.addEventListener("click", () => moverDia(Number(b.dataset.mover))));
 
     form.addEventListener("change", e => { if (e.target.name === "servicio") alCambiarServicio(); });
     $("#lista-servicios").addEventListener("click", e => {
@@ -494,7 +549,7 @@
         if (r && r.ok) {
           mostrarConfirmacion(datos, r.demo);
           form.reset(); domi = null; pintarDomi(); alCambiarServicio();
-          $("#f-fecha").value = datos.fecha; cargarHorarios();
+          elegirFecha(datos.fecha);
         } else if (r && r.error === "OCUPADO") {
           $("#f-msg").textContent = "¡Uy! Alguien acaba de reservar ese horario. Elegí otro, por favor.";
           cargarHorarios();

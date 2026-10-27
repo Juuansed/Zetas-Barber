@@ -219,6 +219,27 @@ textarea { resize: vertical; min-height: 90px; }
 
 .domi-box { border-left: 3px solid var(--gold); padding-left: 14px; margin-bottom: 4px; }
 
+/* Días para elegir (mismo estilo que el panel) */
+.date-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.date-title { flex: 1; margin: 0; text-align: center; font-family: var(--font-display); font-size: 1.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+.arrow { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #3a3a3a; background: none; color: var(--text); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.arrow:hover:not([disabled]) { border-color: var(--gold); }
+.arrow[disabled] { opacity: .3; cursor: default; }
+.days { position: relative; display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; scroll-snap-type: x proximity; scrollbar-width: none; }
+.days::-webkit-scrollbar { display: none; }
+.day {
+  flex: none; width: 62px; padding: 8px 0; border-radius: 14px; text-align: center; scroll-snap-align: center;
+  background: #121212; border: 1.5px solid #3a3a3a; color: var(--text); font-family: var(--font-body); cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.day small { display: block; font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.day b { display: block; font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.day i { display: block; font-style: normal; font-size: .7rem; color: var(--muted); text-transform: uppercase; }
+.day:hover:not([disabled]) { border-color: var(--gold); }
+.day[aria-checked="true"] { border-color: var(--gold); background: rgba(214,168,78,.14); }
+.day[aria-checked="true"] small, .day[aria-checked="true"] i { color: var(--gold-2); }
+.day[disabled] { opacity: .35; cursor: not-allowed; }
+
 /* Horarios disponibles */
 .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
 .slots .hint, .slots .slots__msg { grid-column: 1 / -1; margin: 0; }
