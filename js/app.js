@@ -475,6 +475,7 @@
     const telDigitos = $("#f-tel").value.replace(/\D/g, "");
     marcarError("#e-nombre", "#f-nombre", nombre.length < 3 ? "Escribí tu nombre y apellido." : "");
     marcarError("#e-tel", "#f-tel", telDigitos.length < 8 || telDigitos.length > 15 ? "Escribí un teléfono válido (con código de área)." : "");
+    marcarError("#e-insta", "#f-insta", limpiarInstagram($("#f-insta").value) ? "" : "Escribí tu usuario de Instagram (por ejemplo: juan.perez).");
     const s = servicioActual();
     marcarError("#e-servicio", null, s ? "" : "Elegí un servicio.");
     if (!s && !primero) primero = $("#f-servicios input");
@@ -487,11 +488,19 @@
     return ok;
   }
 
+  // "@Juan.Perez", "instagram.com/juan.perez/" o "juan.perez" -> "juan.perez" ("" si no es válido)
+  function limpiarInstagram(v) {
+    const s = String(v || "").trim().toLowerCase()
+      .replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/[/?#].*$/, "").replace(/^@+/, "");
+    return /^[a-z0-9._]{1,30}$/.test(s) ? s : "";
+  }
+
   function mensajeWhatsApp(d) {
     const lineas = [
       "¡Hola Zetas Barber! Reservé un turno desde la web:",
       `• Nombre: ${d.nombre}`,
       `• Teléfono: ${d.telefono}`,
+      `• Instagram: @${d.instagram}`,
       `• Servicio: ${d.servicio}`,
       `• Fecha: ${isoALindo(d.fecha)}`,
       `• Hora: ${d.hora}`
@@ -538,10 +547,11 @@
       $("#e-hora").textContent = "";
     });
 
-    ["#f-nombre", "#f-tel"].forEach(id => $(id).addEventListener("input", e => {
-      e.target.removeAttribute("aria-invalid");
-      $(id === "#f-nombre" ? "#e-nombre" : "#e-tel").textContent = "";
-    }));
+    [["#f-nombre", "#e-nombre"], ["#f-tel", "#e-tel"], ["#f-insta", "#e-insta"]].forEach(([id, err]) =>
+      $(id).addEventListener("input", e => {
+        e.target.removeAttribute("aria-invalid");
+        $(err).textContent = "";
+      }));
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
@@ -559,6 +569,7 @@
       const datos = {
         nombre: $("#f-nombre").value.trim(),
         telefono: $("#f-tel").value.trim(),
+        instagram: limpiarInstagram($("#f-insta").value),
         servicio: s.nombre,
         fecha: $("#f-fecha").value,      // AAAA-MM-DD
         hora: horaElegida,               // HH:MM
@@ -575,6 +586,9 @@
           mostrarConfirmacion(datos, r.demo);
           form.reset(); domi = null; pintarDomi(); alCambiarServicio();
           elegirFecha(datos.fecha);
+        } else if (r && r.error === "FALTA_INSTAGRAM") {
+          $("#e-insta").textContent = "Escribí tu usuario de Instagram (por ejemplo: juan.perez).";
+          $("#f-insta").focus();
         } else if (r && r.error === "ANTICIPACION") {
           $("#f-msg").textContent = `Los cortes a domicilio se reservan con ${CONFIG.DOMICILIO_HORAS_ANTICIPACION} hs de anticipación. Elegí otro horario.`;
           cargarHorarios();

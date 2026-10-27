@@ -45,7 +45,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20261027b">
+  <link rel="stylesheet" href="css/styles.css?v=20261027c">
   <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
@@ -154,6 +154,17 @@
               <input id="f-tel" name="telefono" type="tel" inputmode="tel" autocomplete="tel" required placeholder="Ej: 11 5555-1234" maxlength="25">
               <p class="error" id="e-tel"></p>
             </div>
+          </div>
+
+          <div class="field">
+            <label for="f-insta">Tu Instagram <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-prefix">
+              <span aria-hidden="true">@</span>
+              <input id="f-insta" name="instagram" type="text" required maxlength="60" autocomplete="off"
+                     autocapitalize="none" spellcheck="false" placeholder="tu.usuario" aria-describedby="h-insta">
+            </div>
+            <p class="hint" id="h-insta">Lo pedimos para saber quién viene. Tiene que ser tu cuenta.</p>
+            <p class="error" id="e-insta"></p>
           </div>
 
           <fieldset class="field">
@@ -286,8 +297,8 @@
     </div>
   </dialog>
 
-  <script src="js/config.js?v=20261027b"></script>
-  <script src="js/mapas.js?v=20261027b"></script>
-  <script src="js/app.js?v=20261027b"></script>
+  <script src="js/config.js?v=20261027c"></script>
+  <script src="js/mapas.js?v=20261027c"></script>
+  <script src="js/app.js?v=20261027c"></script>
 </body>
 </html>
