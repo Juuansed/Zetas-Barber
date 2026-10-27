@@ -13,7 +13,7 @@ const CONFIG = {
   // (termina en /exec). Mirá INSTRUCCIONES.md, paso 4.
   // Mientras diga "PEGAR_ACA...", la web funciona en MODO DEMO
   // (no guarda nada, solo muestra cómo se vería).
-  SCRIPT_URL: "PEGAR_ACA_LA_URL_DEL_WEB_APP",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyCKDFRNA-l5Ye00EpvWsUudXVO5lp412dcsqjwVQgKYSlhEqsHVMCmlNECGqXTGqpK/exec",
 
   // ---------- DATOS DEL NEGOCIO ----------
   NOMBRE: "Zetas Barber",
