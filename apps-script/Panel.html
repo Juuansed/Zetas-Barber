@@ -70,6 +70,9 @@
     .libre div { display: flex; gap: 6px; }
     .mini { font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--text); }
     .mini.gold { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+    .mini.danger { color: var(--danger); border-color: rgba(255,123,107,.4); }
+    .mini.danger.confirmar { background: var(--danger); color: #1a0703; border-color: var(--danger); }
+    .t-borrar { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); text-align: right; }
 
     .turno { padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px; }
     .turno + .turno { margin-top: 6px; }
@@ -293,7 +296,7 @@
   function tarjeta(t) {
     if (t.estado === "Bloqueado") {
       return `<div class="turno e-bloqueado"><div class="t-head"><span class="t-name">Bloqueado</span>
-        <button class="mini" type="button" data-fila="${t.fila}" data-hora="${t.hora}" data-estado="Cancelado">Liberar</button></div>
+        <button class="mini" type="button" data-fila="${t.fila}" data-hora="${t.hora}" data-borrar="liberar">Liberar</button></div>
         ${t.comentarios ? `<p class="t-info">${esc(t.comentarios)}</p>` : ""}</div>`;
     }
     const wa = waNumero(t.telefono);
@@ -311,7 +314,35 @@
         ${wa ? `<a class="mini wa" target="_blank" rel="noopener" href="https:\/\/wa.me\/${wa}?text=${encodeURIComponent(msg)}">WhatsApp</a>
         <a class="mini call" href="tel:${esc(t.telefono)}">Llamar</a>` : ""}
         <select class="estado" aria-label="Estado del turno de ${esc(t.nombre)}" data-fila="${t.fila}" data-hora="${t.hora}">${opciones}</select>
-      </div></article>`;
+      </div>
+      <div class="t-borrar"><button class="mini danger" type="button" data-fila="${t.fila}" data-hora="${t.hora}" data-borrar="turno">Borrar turno</button></div>
+      </article>`;
+  }
+
+  /* Borrar pide un segundo toque para confirmar (los carteles del navegador no andan bien dentro de Google). */
+  async function borrar(boton) {
+    if (state.ocupado) return;
+    if (boton.dataset.borrar === "turno" && !boton.classList.contains("confirmar")) {
+      boton.classList.add("confirmar");
+      boton.textContent = "¿Seguro? Tocá de nuevo para borrar";
+      setTimeout(() => {
+        if (!boton.isConnected) return;
+        boton.classList.remove("confirmar");
+        boton.textContent = "Borrar turno";
+      }, 4000);
+      return;
+    }
+    state.ocupado = true;
+    boton.disabled = true;
+    try {
+      await server("borrarTurno", Number(boton.dataset.fila), isoATexto(state.iso), boton.dataset.hora);
+      toast(boton.dataset.borrar === "liberar" ? "Horario liberado" : "Turno borrado");
+    } catch (err) {
+      toast(err.message || String(err), true);
+    } finally {
+      state.ocupado = false;
+      await cargar();
+    }
   }
 
   async function cambiarEstado(fila, hora, estado) {
@@ -387,6 +418,7 @@
     if (t.dataset.nuevo) return abrirForm(t.dataset.nuevo, false);
     if (t.dataset.bloquear) return abrirForm(t.dataset.bloquear, true);
     if (t.dataset.estado) return cambiarEstado(t.dataset.fila, t.dataset.hora, t.dataset.estado);
+    if (t.dataset.borrar) return borrar(t);
   });
   document.addEventListener("change", e => {
     if (e.target.matches("select.estado")) cambiarEstado(e.target.dataset.fila, e.target.dataset.hora, e.target.value);

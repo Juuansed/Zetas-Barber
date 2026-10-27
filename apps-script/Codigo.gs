@@ -210,6 +210,21 @@ function cambiarEstado(fila, fechaTexto, hora, estado) {
   }
 }
 
+// Borra la fila del turno de la planilla (no se puede deshacer desde el panel).
+function borrarTurno(fila, fechaTexto, hora) {
+  soloDueno_();
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var hoja = obtenerHoja();
+    controlarFila_(hoja, fila, fechaTexto, hora);
+    hoja.deleteRow(fila);
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function agregarTurnoPanel(d) {
   soloDueno_();
   var r = guardarTurno_(d, d.bloquear ? 'Bloqueado' : 'Confirmado');
