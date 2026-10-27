@@ -9,6 +9,7 @@ Esta guía es para que conectes la página con tu planilla de Google, cambies tu
 | `index.html` | La página web. |
 | `js/config.js` | **El único archivo que vas a editar:** precios, horarios, WhatsApp, Instagram, ubicación y la URL de la planilla. |
 | `apps-script/Codigo.gs` | El código que va pegado en tu planilla de Google. |
+| `apps-script/Panel.html` | El panel de turnos para el celu (también va pegado en la planilla). |
 | `css/`, `js/app.js`, `js/mapas.js`, `img/` | Diseño, funcionamiento y logo. No hace falta tocarlos. |
 
 Para editar `config.js`: clic derecho → **Abrir con** → **Bloc de notas**. Cambiá solo lo que está entre comillas o los números, y guardá.
@@ -29,7 +30,11 @@ No hace falta escribir los títulos de las columnas: el script los crea solo.
 2. Vas a ver un archivo `Código.gs` con algo escrito (`function myFunction() {...}`). **Borrá todo.**
 3. Abrí el archivo `apps-script/Codigo.gs` de esta carpeta con el Bloc de notas, seleccioná todo (**Ctrl + A**), copialo (**Ctrl + C**) y pegalo en Apps Script (**Ctrl + V**).
 4. Tocá el ícono del **disquete** (Guardar) o **Ctrl + S**.
-5. Arriba, a la izquierda, cambiá el nombre del proyecto "Proyecto sin título" por **Zetas Barber**.
+5. Ahora el panel: a la izquierda, al lado de "Archivos", tocá el **+** → **HTML**. Escribí el nombre **Panel** (así, con P mayúscula y sin ".html") y Enter.
+6. Borrá lo que trae ese archivo nuevo, abrí `apps-script/Panel.html` de esta carpeta con el Bloc de notas, copiá todo y pegalo ahí. Guardá.
+7. Arriba, a la izquierda, cambiá el nombre del proyecto "Proyecto sin título" por **Zetas Barber**.
+
+> **¿Ya tenías la planilla armada de antes?** Reemplazá el código de `Código.gs` por el nuevo, agregá el archivo **Panel** (pasos 5 y 6) y después, en la barra de arriba, elegí **darFormato** y tocá **▶ Ejecutar** una vez: le pone colores por estado y agrega "Bloqueado" a la lista. Tus turnos no se tocan. Después seguí con "Si cambiás el script más adelante" y con el paso 4b.
 
 ## Paso 3 — Probar y dar permisos
 
@@ -52,7 +57,29 @@ No hace falta escribir los títulos de las columnas: el script los crea solo.
 4. Tocá **Implementar** (si te pide permisos de nuevo, aceptá igual que en el paso 3).
 5. Aparece la **URL de la aplicación web**, que termina en `/exec`. Tocá **Copiar**.
 
-> Para comprobar que anda, pegá esa URL en una pestaña nueva del navegador. Tiene que aparecer un texto que dice `"Zetas Barber: el script está funcionando."`
+> Para comprobar que anda, abrí esa URL en una ventana de incógnito. Tiene que aparecer un texto que dice `"Zetas Barber: el script está funcionando."`
+
+## Paso 4b — Publicar el panel de turnos (solo para vos)
+
+El panel es como el de Furia: una pantalla para el celu donde ves la agenda del día y manejás los turnos. Se publica aparte y **solo vos** lo podés abrir, porque muestra nombres y teléfonos de tus clientes.
+
+1. En Apps Script, **Implementar** → **Nueva implementación** → engranaje ⚙ → **Aplicación web**.
+2. Completá así:
+   - **Descripción:** Panel
+   - **Ejecutar como:** **Yo**
+   - **Quién tiene acceso:** **Solo yo** ← importante, no "Cualquier usuario"
+3. **Implementar** y copiá esa URL (es distinta de la del paso 4).
+4. Abrila en el celu con la misma cuenta de Google de la planilla y guardala: en Chrome, menú ⋮ → **Agregar a la pantalla principal**. Te queda como una app.
+
+**Qué podés hacer en el panel:**
+- Ver los turnos de cada día, con los próximos 14 días arriba (el número es la cantidad de turnos).
+- Ver cuánta plata tenés prevista en el día y cuánto ya cobraste (los turnos marcados **Realizado**).
+- Cambiar el estado de un turno: Pendiente, Confirmado, Realizado, Cancelado o No vino.
+- Mandarle un recordatorio por WhatsApp al cliente con un toque, o llamarlo.
+- **+ Turno:** cargar un turno que te pidieron por teléfono o en persona.
+- **Bloquear:** cerrar un horario (almuerzo, trámite) para que nadie lo reserve en la web. **Liberar** lo vuelve a abrir.
+
+> La URL del paso 4 (la pública) es la que va en la página web. La del 4b es solo para vos: no la compartas.
 
 ## Paso 5 — Pegar la URL en la página
 
@@ -84,15 +111,16 @@ En la planilla de Google: **Archivo** → **Descargar** → **Microsoft Excel (.
 
 ## Cómo manejar los turnos día a día
 
-- Cada reserva nueva aparece abajo de todo con estado **Pendiente**.
-- En la columna **Estado** tocás la celda y elegís **Confirmado**, **Realizado**, **Cancelado** o **No vino**.
+- Lo más cómodo es usar el **panel** del paso 4b desde el celu.
+- En la planilla, cada reserva nueva aparece abajo de todo con estado **Pendiente**, y cada fila se pinta según el estado: amarillo pendiente, verde confirmado, celeste realizado, rojo cancelado, naranja no vino, gris bloqueado.
+- También podés cambiar el estado directo en la planilla, tocando la celda de la columna **Estado**.
 - Si ponés **Cancelado** o **No vino**, ese horario vuelve a quedar libre en la web.
-- Para bloquear un horario a mano (por ejemplo un cliente que te pidió turno por teléfono), agregá una fila con la fecha (`25/10/2026`) en "Fecha del turno" y la hora (`14:15`) en "Hora". La web lo va a mostrar como ocupado.
-- Tené la app **Google Sheets** en el celu para verlo todo al instante.
+- Para filtrar (por ejemplo, ver solo un día): **Datos** → **Crear un filtro**, y usá la flechita del título "Fecha del turno".
+- Si cambiás los horarios o precios en `js/config.js`, cambialos también arriba de todo en `Codigo.gs` (`HORARIOS` y `SERVICIOS`), así el panel muestra lo mismo.
 
 ## Si cambiás el script más adelante
 
-Si editás `Codigo.gs`, guardá y andá a **Implementar** → **Gestionar implementaciones** → **lápiz ✏** → en **Versión** elegí **Nueva versión** → **Implementar**. Así la URL sigue siendo la misma y no tenés que tocar la página.
+Si editás `Codigo.gs`, guardá y andá a **Implementar** → **Gestionar implementaciones** → **lápiz ✏** → en **Versión** elegí **Nueva versión** → **Implementar**. Así la URL sigue siendo la misma y no tenés que tocar la página. Hacelo con las **dos** implementaciones (la pública y la del Panel).
 
 ## Poner la página en internet (gratis)
 

@@ -1,67 +1,103 @@
 /* =============================================================
-   ZETAS BARBER — Script de la planilla de turnos
+   ZETAS BARBER — Planilla y panel de turnos
    -------------------------------------------------------------
    Pegá TODO este código en Extensiones > Apps Script de tu
    planilla de Google Sheets (ver INSTRUCCIONES.md).
-   - doGet:  la web pregunta qué horarios están ocupados en una fecha.
-   - doPost: la web manda una reserva nueva y se agrega como fila.
+   - La página web pregunta qué horarios están ocupados (doGet)
+     y manda las reservas nuevas (doPost).
+   - El panel (archivo "Panel") te muestra la agenda del día en
+     el celu: confirmar, marcar realizado, cancelar, agregar
+     turnos a mano y bloquear horarios.
    ============================================================= */
 
 var NOMBRE_HOJA = 'Reservas';
 var ZONA_HORARIA = 'America/Argentina/Buenos_Aires';
 var ESTADO_INICIAL = 'Pendiente';
-// Si en la columna "Estado" escribís alguno de estos, ese horario se libera.
+var ESTADOS = ['Pendiente', 'Confirmado', 'Realizado', 'Cancelado', 'No vino', 'Bloqueado'];
+// Si en la columna "Estado" dice alguno de estos, ese horario queda libre.
 var ESTADOS_QUE_LIBERAN = ['cancelado', 'cancelada', 'anulado', 'no vino'];
+
+// 👉 Mismos horarios que en js/config.js de la página. Se usan para
+//    mostrar los turnos libres en el panel. Si cambiás uno, cambiá el otro.
+var DURACION_TURNO_MIN = 45;
+var HORARIOS = {
+  0: ['12:00', '18:00'], // domingo
+  1: ['12:00', '20:00'], // lunes
+  2: ['12:00', '20:00'], // martes
+  3: ['12:00', '20:00'], // miércoles
+  4: ['12:00', '20:00'], // jueves
+  5: ['12:00', '20:00'], // viernes
+  6: ['12:00', '18:00']  // sábado
+};
+// 👉 Servicios y precios para cargar turnos a mano desde el panel.
+var SERVICIOS = [
+  ['Corte', 8000],
+  ['Corte + cejas + barba', 10000],
+  ['Corte a domicilio', 15000]
+];
+// 👉 Dirección de la página (para el botón "Ver la página" del panel).
+var SITIO_URL = 'https://zetasbarber.com';
 
 var COLUMNAS = [
   'Fecha de registro', 'Nombre', 'Teléfono', 'Servicio', 'Fecha del turno', 'Hora',
   'Dirección (si es a domicilio)', 'Km', 'Precio total', 'Comentarios', 'Estado'
 ];
-// Posición (empezando en 0) de las columnas que se usan para chequear duplicados.
-var COL_FECHA = 4, COL_HORA = 5, COL_ESTADO = 10;
+// Posición (empezando en 0) de cada columna.
+var C = { REG: 0, NOMBRE: 1, TEL: 2, SERVICIO: 3, FECHA: 4, HORA: 5, DIR: 6, KM: 7, PRECIO: 8, COM: 9, ESTADO: 10 };
 
 
-/* ---------- La web pide los horarios ocupados de una fecha ---------- */
+/* =============================================================
+   PÁGINA WEB (pública)
+   ============================================================= */
+
 function doGet(e) {
-  try {
-    var p = (e && e.parameter) || {};
-    if (p.accion === 'ocupados') {
+  var p = (e && e.parameter) || {};
+  if (p.accion === 'ocupados') {
+    try {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(p.fecha || '')) return responder({ ok: false, error: 'FECHA_INVALIDA' });
       return responder({ ok: true, fecha: p.fecha, ocupados: horariosOcupados(isoATexto(p.fecha)) });
+    } catch (err) {
+      return responder({ ok: false, error: 'ERROR', mensaje: String(err) });
     }
-    return responder({ ok: true, mensaje: 'Zetas Barber: el script está funcionando.' });
+  }
+  // Sin "accion": es el dueño abriendo el panel desde el celu.
+  if (esDueno_()) {
+    return HtmlService.createHtmlOutputFromFile('Panel')
+      .setTitle('Zetas Barber · Turnos')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+  }
+  return responder({ ok: true, mensaje: 'Zetas Barber: el script está funcionando.' });
+}
+
+function doPost(e) {
+  try {
+    var d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    var hoy = Utilities.formatDate(new Date(), ZONA_HORARIA, 'yyyy-MM-dd');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '') && d.fecha < hoy) return responder({ ok: false, error: 'FECHA_PASADA' });
+    return responder(guardarTurno_(d, ESTADO_INICIAL));
   } catch (err) {
     return responder({ ok: false, error: 'ERROR', mensaje: String(err) });
   }
 }
 
+// Valida y agrega una fila. Devuelve { ok, fila } o { ok:false, error }.
+function guardarTurno_(d, estado) {
+  var nombre = limpiar(d.nombre, 80);
+  var telefono = limpiar(d.telefono, 25);
+  var servicio = limpiar(d.servicio, 60);
+  var hora = String(d.hora || '');
+  if (!nombre || !servicio) return { ok: false, error: 'FALTAN_DATOS' };
+  if (estado !== 'Bloqueado' && !telefono) return { ok: false, error: 'FALTAN_DATOS' };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '') || !/^\d{2}:\d{2}$/.test(hora)) {
+    return { ok: false, error: 'FECHA_INVALIDA' };
+  }
+  var fechaTexto = isoATexto(d.fecha);
 
-/* ---------- La web manda una reserva nueva ---------- */
-function doPost(e) {
+  // Bloqueo: si dos personas reservan al mismo tiempo, se atienden de a una.
   var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
   try {
-    var d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-
-    // Validaciones básicas
-    var nombre = limpiar(d.nombre, 80);
-    var telefono = limpiar(d.telefono, 25);
-    var servicio = limpiar(d.servicio, 60);
-    var hora = String(d.hora || '');
-    if (!nombre || !telefono || !servicio) return responder({ ok: false, error: 'FALTAN_DATOS' });
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '') || !/^\d{2}:\d{2}$/.test(hora)) {
-      return responder({ ok: false, error: 'FECHA_INVALIDA' });
-    }
-    var hoy = Utilities.formatDate(new Date(), ZONA_HORARIA, 'yyyy-MM-dd');
-    if (d.fecha < hoy) return responder({ ok: false, error: 'FECHA_PASADA' });
-
-    var fechaTexto = isoATexto(d.fecha);
-
-    // Bloqueo: si dos personas reservan al mismo tiempo, se atienden de a una.
-    lock.waitLock(20000);
-
-    if (horariosOcupados(fechaTexto).indexOf(hora) !== -1) {
-      return responder({ ok: false, error: 'OCUPADO' });
-    }
+    if (horariosOcupados(fechaTexto).indexOf(hora) !== -1) return { ok: false, error: 'OCUPADO' };
 
     var hoja = obtenerHoja();
     var fila = hoja.getLastRow() + 1;
@@ -80,37 +116,157 @@ function doPost(e) {
       d.km === '' || d.km == null ? '' : Number(d.km),
       Number(d.precio) || 0,
       limpiar(d.comentarios, 400),
-      ESTADO_INICIAL
+      estado
     ]]);
     SpreadsheetApp.flush();
-
-    return responder({ ok: true, fila: fila });
-  } catch (err) {
-    return responder({ ok: false, error: 'ERROR', mensaje: String(err) });
+    return { ok: true, fila: fila };
   } finally {
-    try { lock.releaseLock(); } catch (x) {}
+    lock.releaseLock();
   }
 }
 
 
-/* ---------- Ayudantes ---------- */
+/* =============================================================
+   PANEL (solo el dueño)
+   ============================================================= */
 
-// Devuelve ["12:00", "13:30", ...] reservados para una fecha "dd/MM/yyyy".
-function horariosOcupados(fechaTexto) {
+// El panel solo se abre con el link de la implementación "Panel"
+// (acceso: Solo yo). En la implementación pública, Google no informa
+// quién visita, así que ahí no se muestra.
+function esDueno_() {
+  var activo = Session.getActiveUser().getEmail();
+  return !!activo && activo === Session.getEffectiveUser().getEmail();
+}
+function soloDueno_() {
+  if (!esDueno_()) throw new Error('No tenés permiso para usar el panel.');
+}
+
+// Todo lo que el panel necesita para mostrar un día.
+function panelDia(iso) {
+  soloDueno_();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) iso = hoyIso_();
+  var fechaTexto = isoATexto(iso);
+  var filas = leerFilas_();
+
+  var turnos = filas.filter(function (t) { return t.fecha === fechaTexto; })
+    .sort(function (a, b) { return a.hora < b.hora ? -1 : a.hora > b.hora ? 1 : 0; });
+
+  // Próximos 14 días: cuántos turnos activos hay en cada uno.
+  var proximos = [];
+  for (var i = 0; i < 14; i++) {
+    var dIso = sumarDias_(hoyIso_(), i);
+    var dTxt = isoATexto(dIso);
+    proximos.push({
+      iso: dIso,
+      abierto: !!HORARIOS[diaSemana_(dIso)],
+      cantidad: filas.filter(function (t) { return t.fecha === dTxt && activo_(t.estado) && t.estado !== 'Bloqueado'; }).length
+    });
+  }
+
+  return {
+    iso: iso,
+    hoy: hoyIso_(),
+    ahora: Utilities.formatDate(new Date(), ZONA_HORARIA, 'HH:mm'),
+    horario: HORARIOS[diaSemana_(iso)] || null,
+    grilla: grilla_(iso),
+    turnos: turnos,
+    proximos: proximos,
+    servicios: SERVICIOS,
+    estados: ESTADOS,
+    sitio: SITIO_URL
+  };
+}
+
+function cambiarEstado(fila, fechaTexto, hora, estado) {
+  soloDueno_();
+  if (ESTADOS.indexOf(estado) === -1) throw new Error('Estado desconocido.');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var hoja = obtenerHoja();
+    controlarFila_(hoja, fila, fechaTexto, hora);
+    // Reactivar un turno cancelado: solo si nadie tomó ese horario mientras tanto.
+    if (!activo_(String(hoja.getRange(fila, C.ESTADO + 1).getValue())) && activo_(estado) &&
+        horariosOcupados(fechaTexto).indexOf(hora) !== -1) {
+      throw new Error('Ese horario ya lo tomó otra persona.');
+    }
+    hoja.getRange(fila, C.ESTADO + 1).setValue(estado);
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function agregarTurnoPanel(d) {
+  soloDueno_();
+  var r = guardarTurno_(d, d.bloquear ? 'Bloqueado' : 'Confirmado');
+  if (!r.ok) {
+    throw new Error({
+      OCUPADO: 'Ese horario ya está ocupado.',
+      FALTAN_DATOS: 'Completá nombre, teléfono y servicio.',
+      FECHA_INVALIDA: 'Revisá la fecha y la hora.'
+    }[r.error] || 'No se pudo guardar.');
+  }
+  return r;
+}
+
+// Antes de tocar una fila, se fija que siga siendo el mismo turno
+// (por si ordenaste o borraste filas en la planilla mientras tanto).
+function controlarFila_(hoja, fila, fechaTexto, hora) {
+  if (fila < 2 || fila > hoja.getLastRow()) throw new Error('La planilla cambió. Actualizá el panel.');
+  var v = hoja.getRange(fila, 1, 1, COLUMNAS.length).getValues()[0];
+  if (normalizarFecha(v[C.FECHA]) !== fechaTexto || normalizarHora(v[C.HORA]) !== hora) {
+    throw new Error('La planilla cambió. Actualizá el panel.');
+  }
+}
+
+
+/* =============================================================
+   AYUDANTES
+   ============================================================= */
+
+function leerFilas_() {
   var hoja = obtenerHoja();
   var ultima = hoja.getLastRow();
   if (ultima < 2) return [];
-  var datos = hoja.getRange(2, 1, ultima - 1, COLUMNAS.length).getValues();
-  var ocupados = [];
-  for (var i = 0; i < datos.length; i++) {
-    var fila = datos[i];
-    var estado = String(fila[COL_ESTADO] || '').trim().toLowerCase();
-    if (ESTADOS_QUE_LIBERAN.indexOf(estado) !== -1) continue;
-    if (normalizarFecha(fila[COL_FECHA]) !== fechaTexto) continue;
-    var h = normalizarHora(fila[COL_HORA]);
-    if (h) ocupados.push(h);
+  return hoja.getRange(2, 1, ultima - 1, COLUMNAS.length).getValues().map(function (r, i) {
+    return {
+      fila: i + 2,
+      nombre: String(r[C.NOMBRE] || ''),
+      telefono: String(r[C.TEL] || ''),
+      servicio: String(r[C.SERVICIO] || ''),
+      fecha: normalizarFecha(r[C.FECHA]),
+      hora: normalizarHora(r[C.HORA]),
+      direccion: String(r[C.DIR] || ''),
+      km: r[C.KM] === '' ? '' : Number(r[C.KM]),
+      precio: Number(r[C.PRECIO]) || 0,
+      comentarios: String(r[C.COM] || ''),
+      estado: String(r[C.ESTADO] || '').trim() || ESTADO_INICIAL
+    };
+  }).filter(function (t) { return t.fecha && t.hora; });
+}
+
+function activo_(estado) {
+  return ESTADOS_QUE_LIBERAN.indexOf(String(estado || '').trim().toLowerCase()) === -1;
+}
+
+// Devuelve ["12:00", "13:30", ...] reservados para una fecha "dd/MM/yyyy".
+function horariosOcupados(fechaTexto) {
+  return leerFilas_()
+    .filter(function (t) { return t.fecha === fechaTexto && activo_(t.estado); })
+    .map(function (t) { return t.hora; });
+}
+
+// Todos los turnos posibles de un día según HORARIOS y DURACION_TURNO_MIN.
+function grilla_(iso) {
+  var h = HORARIOS[diaSemana_(iso)];
+  if (!h) return [];
+  var aMin = function (s) { var p = s.split(':'); return +p[0] * 60 + +p[1]; };
+  var out = [];
+  for (var t = aMin(h[0]); t + DURACION_TURNO_MIN <= aMin(h[1]); t += DURACION_TURNO_MIN) {
+    out.push(('0' + Math.floor(t / 60)).slice(-2) + ':' + ('0' + t % 60).slice(-2));
   }
-  return ocupados;
+  return out;
 }
 
 function obtenerHoja() {
@@ -118,19 +274,55 @@ function obtenerHoja() {
   var hoja = libro.getSheetByName(NOMBRE_HOJA);
   if (!hoja) hoja = libro.insertSheet(NOMBRE_HOJA);
   if (hoja.getLastRow() === 0) {
-    hoja.getRange(1, 1, 1, COLUMNAS.length).setValues([COLUMNAS])
-      .setFontWeight('bold').setBackground('#1c1c1c').setFontColor('#f0c873');
-    hoja.setFrozenRows(1);
-    hoja.setColumnWidths(1, COLUMNAS.length, 140);
-    hoja.setColumnWidth(7, 260);
-    hoja.setColumnWidth(10, 260);
-    // Menú desplegable en "Estado" para cambiarlo con un toque.
-    var regla = SpreadsheetApp.newDataValidation()
-      .requireValueInList(['Pendiente', 'Confirmado', 'Realizado', 'Cancelado', 'No vino'], true)
-      .setAllowInvalid(true).build();
-    hoja.getRange(2, COL_ESTADO + 1, 1000, 1).setDataValidation(regla);
+    hoja.getRange(1, 1, 1, COLUMNAS.length).setValues([COLUMNAS]);
+    darFormato();
   }
   return hoja;
+}
+
+/* Le da formato a la planilla: títulos, anchos, menú de estados y colores.
+   Se aplica sola al crear la hoja. Si ya la tenías creada, elegí
+   "darFormato" arriba y tocá Ejecutar una vez. */
+function darFormato() {
+  var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NOMBRE_HOJA);
+  if (!hoja) return obtenerHoja();
+  hoja.getRange(1, 1, 1, COLUMNAS.length)
+    .setFontWeight('bold').setBackground('#1c1c1c').setFontColor('#f0c873').setVerticalAlignment('middle');
+  hoja.setRowHeight(1, 34);
+  hoja.setFrozenRows(1);
+  hoja.setColumnWidths(1, COLUMNAS.length, 130);
+  hoja.setColumnWidth(C.NOMBRE + 1, 180);
+  hoja.setColumnWidth(C.SERVICIO + 1, 180);
+  hoja.setColumnWidth(C.DIR + 1, 260);
+  hoja.setColumnWidth(C.KM + 1, 60);
+  hoja.setColumnWidth(C.COM + 1, 260);
+
+  var filas = Math.max(hoja.getMaxRows() - 1, 1000);
+  var rEstado = hoja.getRange(2, C.ESTADO + 1, filas, 1);
+  rEstado.setDataValidation(SpreadsheetApp.newDataValidation()
+    .requireValueInList(ESTADOS, true).setAllowInvalid(true).build());
+
+  // Colores por estado en toda la fila.
+  var rTodo = hoja.getRange(2, 1, filas, COLUMNAS.length);
+  var col = String.fromCharCode(65 + C.ESTADO); // "K"
+  var colores = [
+    ['Confirmado', '#d9ead3'], ['Realizado', '#cfe2f3'], ['Cancelado', '#f4cccc'],
+    ['No vino', '#fce5cd'], ['Bloqueado', '#d9d9d9'], ['Pendiente', '#fff2cc']
+  ];
+  var reglas = colores.map(function (c) {
+    return SpreadsheetApp.newConditionalFormatRule()
+      .whenFormulaSatisfied('=$' + col + '2="' + c[0] + '"')
+      .setBackground(c[1]).setRanges([rTodo]).build();
+  });
+  hoja.setConditionalFormatRules(reglas);
+  return hoja;
+}
+
+function hoyIso_() { return Utilities.formatDate(new Date(), ZONA_HORARIA, 'yyyy-MM-dd'); }
+function diaSemana_(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]).getDay(); }
+function sumarDias_(iso, n) {
+  var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2] + n);
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
 }
 
 // "2026-10-25" -> "25/10/2026"

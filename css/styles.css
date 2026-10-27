@@ -109,7 +109,7 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: .02em; line-heigh
     var(--bg);
 }
 .hero__inner { display: flex; flex-direction: column; align-items: center; }
-.hero__logo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--gold), 0 20px 60px rgba(0,0,0,.6); margin-bottom: 22px; animation: pop .8s cubic-bezier(.2,.8,.2,1) both; }
+.hero__logo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 40px rgba(255,255,255,.18), 0 20px 60px rgba(0,0,0,.6); margin-bottom: 22px; animation: pop .8s cubic-bezier(.2,.8,.2,1) both; }
 .eyebrow { margin: 0 0 10px; color: var(--gold); font-weight: 700; font-size: .8rem; letter-spacing: .18em; text-transform: uppercase; }
 .hero__title { font-size: clamp(4.2rem, 21vw, 9rem); font-weight: 900; letter-spacing: .04em; line-height: .86; animation: rise .9s .1s cubic-bezier(.2,.8,.2,1) both; }
 .hero__title span { color: transparent; -webkit-text-stroke: 2px var(--gold); }
