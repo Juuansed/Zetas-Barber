@@ -21,7 +21,7 @@ const CONFIG = {
   // Argentina celular: 549 + código de área sin 0 + número sin 15.
   // Ej: 11 5555-1234  ->  "5491155551234"
   WHATSAPP: "5491176338400",
-  INSTAGRAM: "zetasbarber",          // usuario de Instagram, sin @
+  INSTAGRAM: "zetasbr",          // usuario de Instagram, sin @
   EMAIL: "",                          // opcional, dejalo vacío si no querés mostrarlo
   DIRECCION_TEXTO: "Barrio El Zorzal, General Pacheco, Tigre, Buenos Aires",
 
