@@ -41,11 +41,11 @@ var DOMICILIO_HORAS_ANTICIPACION = 24;
 var SITIO_URL = 'https://zetasbarber.com';
 
 var COLUMNAS = [
-  'Fecha de registro', 'Nombre', 'Teléfono', 'Servicio', 'Fecha del turno', 'Hora',
+  'Fecha de registro', 'Nombre', 'Teléfono', 'Instagram', 'Servicio', 'Fecha del turno', 'Hora',
   'Dirección (si es a domicilio)', 'Km', 'Precio total', 'Comentarios', 'Estado'
 ];
 // Posición (empezando en 0) de cada columna.
-var C = { REG: 0, NOMBRE: 1, TEL: 2, SERVICIO: 3, FECHA: 4, HORA: 5, DIR: 6, KM: 7, PRECIO: 8, COM: 9, ESTADO: 10 };
+var C = { REG: 0, NOMBRE: 1, TEL: 2, INSTA: 3, SERVICIO: 4, FECHA: 5, HORA: 6, DIR: 7, KM: 8, PRECIO: 9, COM: 10, ESTADO: 11 };
 
 
 /* =============================================================
@@ -76,6 +76,8 @@ function doPost(e) {
     var d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var hoy = Utilities.formatDate(new Date(), ZONA_HORARIA, 'yyyy-MM-dd');
     if (/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '') && d.fecha < hoy) return responder({ ok: false, error: 'FECHA_PASADA' });
+    // Desde la web el Instagram es obligatorio (desde el panel no).
+    if (!limpiarInstagram_(d.instagram)) return responder({ ok: false, error: 'FALTA_INSTAGRAM' });
     // El corte a domicilio se reserva con anticipación (desde el panel sí se puede cargar igual).
     if (/domicilio/i.test(String(d.servicio || '')) && /^\d{2}:\d{2}$/.test(String(d.hora || ''))) {
       var inicio = Utilities.parseDate(d.fecha + ' ' + d.hora, ZONA_HORARIA, 'yyyy-MM-dd HH:mm');
@@ -94,6 +96,7 @@ function guardarTurno_(d, estado) {
   var nombre = limpiar(d.nombre, 80);
   var telefono = limpiar(d.telefono, 25);
   var servicio = limpiar(d.servicio, 60);
+  var instagram = limpiarInstagram_(d.instagram);
   var hora = String(d.hora || '');
   if (!nombre || !servicio) return { ok: false, error: 'FALTAN_DATOS' };
   if (estado !== 'Bloqueado' && !telefono) return { ok: false, error: 'FALTAN_DATOS' };
@@ -112,12 +115,13 @@ function guardarTurno_(d, estado) {
     var fila = hoja.getLastRow() + 1;
     var rango = hoja.getRange(fila, 1, 1, COLUMNAS.length);
     rango.setNumberFormats([[
-      'dd/MM/yyyy HH:mm', '@', '@', '@', '@', '@', '@', '0', '$#,##0', '@', '@'
+      'dd/MM/yyyy HH:mm', '@', '@', '@', '@', '@', '@', '@', '0', '$#,##0', '@', '@'
     ]]);
     rango.setValues([[
       new Date(),
       nombre,
       telefono,
+      instagram ? '@' + instagram : '',
       servicio,
       fechaTexto,
       hora,
@@ -243,6 +247,7 @@ function leerFilas_() {
       fila: i + 2,
       nombre: String(r[C.NOMBRE] || ''),
       telefono: String(r[C.TEL] || ''),
+      instagram: limpiarInstagram_(r[C.INSTA]),
       servicio: String(r[C.SERVICIO] || ''),
       fecha: normalizarFecha(r[C.FECHA]),
       hora: normalizarHora(r[C.HORA]),
@@ -285,8 +290,20 @@ function obtenerHoja() {
   if (hoja.getLastRow() === 0) {
     hoja.getRange(1, 1, 1, COLUMNAS.length).setValues([COLUMNAS]);
     darFormato();
+  } else if (String(hoja.getRange(1, C.INSTA + 1).getValue()) !== 'Instagram') {
+    // Planilla anterior sin la columna Instagram: se agrega al lado de Teléfono.
+    hoja.insertColumnAfter(C.TEL + 1);
+    hoja.getRange(1, C.INSTA + 1).setValue('Instagram');
+    darFormato();
   }
   return hoja;
+}
+
+// "@Juan.Perez", "instagram.com/juan.perez/" o "juan.perez" -> "juan.perez"
+function limpiarInstagram_(v) {
+  var s = String(v == null ? '' : v).trim().toLowerCase();
+  s = s.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/[/?#].*$/, '').replace(/^@+/, '');
+  return /^[a-z0-9._]{1,30}$/.test(s) ? s : '';
 }
 
 /* Le da formato a la planilla: títulos, anchos, menú de estados y colores.
@@ -301,6 +318,7 @@ function darFormato() {
   hoja.setFrozenRows(1);
   hoja.setColumnWidths(1, COLUMNAS.length, 130);
   hoja.setColumnWidth(C.NOMBRE + 1, 180);
+  hoja.setColumnWidth(C.INSTA + 1, 150);
   hoja.setColumnWidth(C.SERVICIO + 1, 180);
   hoja.setColumnWidth(C.DIR + 1, 260);
   hoja.setColumnWidth(C.KM + 1, 60);

@@ -169,6 +169,10 @@
           <input id="fTel" class="input" type="tel" inputmode="tel" autocomplete="off">
         </div>
         <div class="field">
+          <label for="fInsta">Instagram (opcional)</label>
+          <input id="fInsta" class="input" type="text" autocomplete="off" autocapitalize="none" placeholder="@usuario">
+        </div>
+        <div class="field">
           <label for="fServicio">Servicio</label>
           <select id="fServicio" class="input"></select>
         </div>
@@ -300,6 +304,7 @@
     return `<article class="turno ${claseEstado(t.estado)} ${activo(t.estado) ? "" : "inactivo"}">
       <div class="t-head"><span class="t-name">${esc(t.nombre)}</span><span class="t-price">${pesos(t.precio)}</span></div>
       <p class="t-info">${esc(t.servicio)}${t.telefono ? " · " + esc(t.telefono) : ""}</p>
+      ${t.instagram ? `<p class="t-info">Instagram: <a href="https:\/\/instagram.com\/${encodeURIComponent(t.instagram)}" target="_blank" rel="noopener">@${esc(t.instagram)}</a></p>` : ""}
       ${t.direccion ? `<p class="t-info">📍 <a href="${mapa}" target="_blank" rel="noopener">${esc(t.direccion)}</a>${t.km !== "" ? ` (${t.km} km)` : ""}</p>` : ""}
       ${t.comentarios ? `<p class="t-com">${esc(t.comentarios)}</p>` : ""}
       <div class="t-actions">
@@ -330,7 +335,7 @@
     $("#fPrecio").closest(".field").hidden = bloquear;
     $("#guardar").textContent = bloquear ? "Bloquear horario" : "Guardar turno";
     $("#fHora").value = hora;
-    ["#fNombre", "#fTel", "#fDir", "#fCom"].forEach(s => $(s).value = "");
+    ["#fNombre", "#fTel", "#fInsta", "#fDir", "#fCom"].forEach(s => $(s).value = "");
     $("#fCom").placeholder = bloquear ? "Motivo (opcional): trámite, almuerzo…" : "";
     $("#fServicio").innerHTML = state.datos.servicios.map(([n, p]) => `<option value="${esc(n)}" data-precio="${p}">${esc(n)}</option>`).join("");
     $("#fPrecio").value = state.datos.servicios[0][1];
@@ -354,6 +359,7 @@
       Object.assign(d, {
         nombre: $("#fNombre").value.trim(),
         telefono: $("#fTel").value.trim(),
+        instagram: $("#fInsta").value.trim(),
         servicio: $("#fServicio").value,
         direccion: $("#fDir").value.trim(),
         precio: Number(String($("#fPrecio").value).replace(/\D/g, "")) || 0
