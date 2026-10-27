@@ -35,6 +35,8 @@ var SERVICIOS = [
   ['Corte + cejas + barba', 10000],
   ['Corte a domicilio', 15000]
 ];
+// 👉 Horas de anticipación mínimas para el corte a domicilio (igual que en js/config.js).
+var DOMICILIO_HORAS_ANTICIPACION = 24;
 // 👉 Dirección de la página (para el botón "Ver la página" del panel).
 var SITIO_URL = 'https://zetasbarber.com';
 
@@ -74,6 +76,13 @@ function doPost(e) {
     var d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var hoy = Utilities.formatDate(new Date(), ZONA_HORARIA, 'yyyy-MM-dd');
     if (/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '') && d.fecha < hoy) return responder({ ok: false, error: 'FECHA_PASADA' });
+    // El corte a domicilio se reserva con anticipación (desde el panel sí se puede cargar igual).
+    if (/domicilio/i.test(String(d.servicio || '')) && /^\d{2}:\d{2}$/.test(String(d.hora || ''))) {
+      var inicio = Utilities.parseDate(d.fecha + ' ' + d.hora, ZONA_HORARIA, 'yyyy-MM-dd HH:mm');
+      if (inicio.getTime() - Date.now() < DOMICILIO_HORAS_ANTICIPACION * 3600 * 1000) {
+        return responder({ ok: false, error: 'ANTICIPACION' });
+      }
+    }
     return responder(guardarTurno_(d, ESTADO_INICIAL));
   } catch (err) {
     return responder({ ok: false, error: 'ERROR', mensaje: String(err) });

@@ -218,6 +218,7 @@ textarea { resize: vertical; min-height: 90px; }
 .chip input:focus-visible + label { outline: 3px solid var(--gold-2); outline-offset: 2px; }
 
 .domi-box { border-left: 3px solid var(--gold); padding-left: 14px; margin-bottom: 4px; }
+.domi-aviso { margin: 0 0 14px; color: var(--gold-2); font-weight: 600; }
 
 /* Días para elegir (mismo estilo que el panel) */
 .date-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }

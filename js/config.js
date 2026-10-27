@@ -37,11 +37,12 @@ const CONFIG = {
   SERVICIOS: [
     { id: "corte",        nombre: "Corte",                  precio: 8000,  descripcion: "Corte clásico o moderno, con terminación a navaja." },
     { id: "completo",     nombre: "Corte + cejas + barba",  precio: 10000, descripcion: "El combo completo: corte, perfilado de cejas y barba." },
-    { id: "domicilio",    nombre: "Corte a domicilio",      precio: 15000, descripcion: "Vamos a tu casa. Base + costo por kilómetro.", domicilio: true }
+    { id: "domicilio",    nombre: "Corte a domicilio",      precio: 15000, descripcion: "Vamos a tu casa. Base + costo por kilómetro. Reservá con 24 hs de anticipación.", domicilio: true }
   ],
   DOMICILIO_BASE: 15000,   // precio base del corte a domicilio
   PRECIO_POR_KM: 1000,     // se suma por cada km (redondeado hacia arriba)
   DOMICILIO_MAX_KM: 40,    // más lejos que esto, se pide consultar por WhatsApp
+  DOMICILIO_HORAS_ANTICIPACION: 24, // el corte a domicilio se reserva con al menos estas horas de anticipación
 
   // ---------- HORARIOS ----------
   DURACION_TURNO_MIN: 45,  // duración de cada turno en minutos

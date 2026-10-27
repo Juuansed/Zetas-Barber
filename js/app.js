@@ -38,6 +38,17 @@
     return CONFIG.HORARIOS[isoADate(iso).getDay()] || null;
   }
 
+  /** ¿El servicio elegido en el formulario es a domicilio? */
+  function eligioDomicilio() {
+    const r = document.querySelector('#form-reserva input[name="servicio"]:checked');
+    const s = r && CONFIG.SERVICIOS.find(x => x.id === r.value);
+    return !!(s && s.domicilio);
+  }
+  // Cuántos minutos antes como mínimo hay que reservar (a domicilio: 24 hs).
+  const anticipacionMin = () => eligioDomicilio()
+    ? CONFIG.DOMICILIO_HORAS_ANTICIPACION * 60
+    : CONFIG.MINUTOS_MINIMOS_ANTES;
+
   /** Todos los turnos posibles de un día (sin contar los reservados). */
   function turnosDelDia(iso) {
     const h = horarioDelDia(iso);
@@ -45,10 +56,11 @@
     const dur = CONFIG.DURACION_TURNO_MIN;
     const fin = aMin(h.cierra);
     const ahora = ahoraAR();
-    const limite = iso === ahora.fecha ? ahora.minutos + CONFIG.MINUTOS_MINIMOS_ANTES : -1;
+    // Minutos desde "ahora" hasta el inicio del día elegido.
+    const desdeAhora = Math.round((isoADate(iso) - isoADate(ahora.fecha)) / 864e5) * 1440 - ahora.minutos;
     const out = [];
     for (let t = aMin(h.abre); t + dur <= fin; t += dur) { // el turno tiene que TERMINAR dentro del horario
-      if (t > limite) out.push(aHora(t));
+      if (desdeAhora + t > anticipacionMin()) out.push(aHora(t));
     }
     return out;
   }
@@ -78,6 +90,7 @@
     $$('[data-precio="base"]').forEach(el => el.textContent = plata(CONFIG.DOMICILIO_BASE));
     $$('[data-precio="km"]').forEach(el => el.textContent = plata(CONFIG.PRECIO_POR_KM));
     $$('[data-texto="direccion"]').forEach(el => el.textContent = CONFIG.DIRECCION_TEXTO);
+    $("#domi-aviso").textContent = `El corte a domicilio se reserva con al menos ${CONFIG.DOMICILIO_HORAS_ANTICIPACION} hs de anticipación.`;
 
     // Horarios: agrupa días consecutivos con el mismo horario (lunes primero)
     const orden = [1, 2, 3, 4, 5, 6, 0];
@@ -321,8 +334,16 @@
   function alCambiarServicio() {
     const s = servicioActual();
     $("#e-servicio").textContent = "";
+    const cambioDomicilio = $("#domi-box").hidden !== !(s && s.domicilio);
     $("#domi-box").hidden = !(s && s.domicilio);
     actualizarTotal();
+    // A domicilio cambian los días y horarios posibles (24 hs de anticipación).
+    if (cambioDomicilio) {
+      const iso = $("#f-fecha").value;
+      if (iso && !diaAbierto(iso)) $("#f-fecha").value = "";
+      pintarDias();
+      cargarHorarios();
+    }
   }
 
   function pintarSlots(html) { $("#f-slots").innerHTML = html; }
@@ -393,7 +414,11 @@
     const h = horarioDelDia(iso);
     $("#f-fecha-info").textContent = `Ese día atendemos de ${h.abre} a ${h.cierra}.`;
     const posibles = turnosDelDia(iso);
-    if (!posibles.length) return pintarSlots(`<p class="slots__msg hint">No quedan turnos para hoy. Elegí otro día.</p>`);
+    if (!posibles.length) {
+      return pintarSlots(`<p class="slots__msg hint">${eligioDomicilio()
+        ? `Los cortes a domicilio se reservan con ${CONFIG.DOMICILIO_HORAS_ANTICIPACION} hs de anticipación. Elegí otro día.`
+        : "No quedan turnos para hoy. Elegí otro día."}</p>`);
+    }
 
     const mio = ++consultaSeq;
     pintarSlots(`<p class="slots__msg hint res--loading"><span class="spinner" aria-hidden="true"></span>Buscando turnos libres…</p>`);
@@ -550,6 +575,9 @@
           mostrarConfirmacion(datos, r.demo);
           form.reset(); domi = null; pintarDomi(); alCambiarServicio();
           elegirFecha(datos.fecha);
+        } else if (r && r.error === "ANTICIPACION") {
+          $("#f-msg").textContent = `Los cortes a domicilio se reservan con ${CONFIG.DOMICILIO_HORAS_ANTICIPACION} hs de anticipación. Elegí otro horario.`;
+          cargarHorarios();
         } else if (r && r.error === "OCUPADO") {
           $("#f-msg").textContent = "¡Uy! Alguien acaba de reservar ese horario. Elegí otro, por favor.";
           cargarHorarios();
