@@ -136,6 +136,12 @@
     $$("a", nav).forEach(a => a.addEventListener("click", cerrar));
     document.addEventListener("keydown", e => { if (e.key === "Escape") cerrar(); });
 
+    // Menú transparente arriba de todo y sólido al hacer scroll.
+    const header = $(".header");
+    const marcarScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 12);
+    window.addEventListener("scroll", marcarScroll, { passive: true });
+    marcarScroll();
+
     const els = $$(".reveal");
     if (!("IntersectionObserver" in window)) { els.forEach(el => el.classList.add("is-visible")); return; }
     const io = new IntersectionObserver(entries => entries.forEach(en => {
